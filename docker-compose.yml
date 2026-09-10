@@ -1,0 +1,47 @@
+services:
+
+
+
+  backend:
+
+    build: ./backend
+
+    container_name: router-backend
+
+
+
+    environment:
+
+      ROUTER_USERNAME: admin
+
+      ROUTER_PASSWORD: cisco
+
+
+
+    restart: unless-stopped
+
+
+
+
+
+  frontend:
+
+    build: ./frontend
+
+    container_name: router-frontend
+
+
+
+    ports:
+
+      - "8000:80"
+
+
+
+    depends_on:
+
+      - backend
+
+
+
+    restart: unless-stopped

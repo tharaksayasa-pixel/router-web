@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+
+    <title>Cisco Router SSH</title>
+
+
+
+    <style>
+
+        * {
+
+            box-sizing: border-box;
+
+        }
+
+
+
+        body {
+
+            margin: 0;
+
+            font-family: Arial, sans-serif;
+
+            background: #0f172a;
+
+            color: white;
+
+        }
+
+
+
+        .container {
+
+            width: 90%;
+
+            max-width: 900px;
+
+            margin: 60px auto;
+
+            background: #1e293b;
+
+            padding: 35px;
+
+            border-radius: 14px;
+
+            box-shadow: 0 10px 30px rgba(0,0,0,.4);
+
+        }
+
+
+
+        h1 {
+
+            margin-top: 0;
+
+            text-align: center;
+
+        }
+
+
+
+        .subtitle {
+
+            text-align: center;
+
+            color: #94a3b8;
+
+            margin-bottom: 35px;
+
+        }
+
+
+
+        label {
+
+            display: block;
+
+            margin-top: 20px;
+
+            margin-bottom: 8px;
+
+  font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 7px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: white;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 25px;
+            padding: 15px;
+            border: 0;
+            border-radius: 7px;
+            background: #0284c7;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0369a1;
+        }
+
+        button:disabled {
+            opacity: .6;
+            cursor: wait;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .success {
+            color: #4ade80;
+        }
+
+        .error {
+            color: #f87171;
+        }
+
+        pre {
+            margin-top: 15px;
+            min-height: 230px;
+        background: #020617;
+            color: #4ade80;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-family: Consolas, monospace;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Cisco Router SSH</h1>
+
+    <div class="subtitle">
+        Execute Cisco IOS commands using Paramiko
+    </div>
+
+    <label>Router IP Address</label>
+
+    <input
+        id="routerIp"
+        type="text"
+        value="192.168.153.132"
+        placeholder="192.168.153.132"
+    >
+
+    <label>Router Command</label>
+
+    <input
+        id="command"
+        type="text"
+        value="show ip interface brief"
+        placeholder="show ip interface brief"
+    >
+
+    <button id="executeButton" onclick="executeCommand()">
+        Execute Command
+    </button>
+
+    <div id="status"></div>
+
+    <h3>Router Output</h3>
+
+    <pre id="output">Waiting for command...</pre>
+
+</div>
+
+
+<script>
+
+async function executeCommand() {
+
+    const ip =
+        document.getElementById("routerIp").value.trim();
+
+    const command =
+        document.getElementById("command").value.trim();
+
+    const button =
+        document.getElementById("executeButton");
+
+    const status =
+        document.getElementById("status");
+
+    const output =
+        document.getElementById("output");
+
+
+    if (!ip || !command) {
+
+        status.className = "error";
+
+        status.textContent =
+            "Please enter router IP and command.";
+
+        return;
+    }
+
+
+    button.disabled = true;
+
+    button.textContent =
+        "Executing...";
+
+    status.className = "";
+
+    status.textContent =
+        "Connecting to router...";
+
+    output.textContent =
+        "";
+
+
+    try {
+
+        const response =
+            await fetch("/api/execute", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                     ip: ip,
+                    command: command
+                })
+            });
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok || !data.success) {
+
+            throw new Error(
+                data.error || "Command failed."
+            );
+        }
+
+
+        status.className =
+            "success";
+
+        status.textContent =
+            "Command executed successfully.";
+
+        output.textContent =
+            data.output || "No output";
+
+
+    } catch (error) {
+
+        status.className =
+            "error";
+
+        status.textContent =
+            "Error: " + error.message;
+
+        output.textContent =
+            "Unable to execute command.";
+
+    } finally {
+
+        button.disabled =
+            false;
+
+        button.textContent =
+            "Execute Command";
+    }
+}
+
+document
+    .getElementById("command")
+    .addEventListener("keydown", function(event) {
+
+        if (event.key === "Enter") {
+            executeCommand();
+        }
+    });
+
+</script>
+
+</body>
+</html>
